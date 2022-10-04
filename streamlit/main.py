@@ -27,6 +27,59 @@ def get_detection_folder():
     '''
     return max(get_subdirs(os.path.join('runs', 'detect')), key=os.path.getmtime)
 
+def remove_argument(parser, arg):
+    for action in parser._actions:
+        opts = action.option_strings
+        if (opts and opts[0] == arg) or action.dest == arg:
+            parser._remove_action(action)
+            break
+
+    for action in parser._action_groups:
+        for group_action in action._group_actions:
+            if group_action.dest == arg:
+                action._group_actions.remove(group_action)
+                return
+
+def create_parser(modelValue):
+    parser = argparse.ArgumentParser(conflict_handler='resolve')
+    if modelValue == 0:
+        parser.add_argument('--weights', nargs='+', type=str,default='weights/yolov5s.pt', help='model.pt path(s)')
+    else:
+        parser.add_argument('--weights', nargs='+', type=str,default='weights/best.pt', help='model.pt path(s)')
+    parser.add_argument('--source', type=str,
+                        default='data/images', help='source')
+    parser.add_argument('--img-size', type=int, default=640,
+                        help='inference size (pixels)')
+    parser.add_argument('--conf-thres', type=float,
+                        default=0.35, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float,
+                        default=0.45, help='IOU threshold for NMS')
+    parser.add_argument('--device', default='',
+                        help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--view-img', action='store_true',
+                        help='display results')
+    parser.add_argument('--save-txt', action='store_true',
+                        help='save results to *.txt')
+    parser.add_argument('--save-conf', action='store_true',
+                        help='save confidences in --save-txt labels')
+    parser.add_argument('--nosave', action='store_true',
+                        help='do not save images/videos')
+    parser.add_argument('--classes', nargs='+', type=int,
+                        help='filter by class: --class 0, or --class 0 2 3')
+    parser.add_argument('--agnostic-nms', action='store_true',
+                        help='class-agnostic NMS')
+    parser.add_argument('--augment', action='store_true',
+                        help='augmented inference')
+    parser.add_argument('--update', action='store_true',
+                        help='update all models')
+    parser.add_argument('--project', default='runs/detect',
+                        help='save results to project/name')
+    parser.add_argument('--name', default='exp',
+                        help='save results to project/name')
+    parser.add_argument('--exist-ok', action='store_true',
+                        help='existing project/name ok, do not increment')
+    opt = parser.parse_args()
+    print(opt)
 
 if __name__ == '__main__':
 
@@ -69,7 +122,16 @@ if __name__ == '__main__':
                         help='existing project/name ok, do not increment')
     opt = parser.parse_args()
     print(opt)
+    
+    model = ("yolo5s", "best")
+    model_index = st.sidebar.selectbox("Select Model", range(
+        len(model)), format_func=lambda x: model[x])
 
+    if model_index == 0:
+        create_parser(0)
+    elif model_index ==1:
+        create_parser(1)
+ 
     source = ("Photo", "Video")
     source_index = st.sidebar.selectbox("Select Input", range(
         len(source)), format_func=lambda x: source[x])
